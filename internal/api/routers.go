@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	rootPath = "/api/"
+	rootPath   = "/api/"
+	noAuthPath = "/out/api"
 )
 
 func CmsRouters(router *gin.Engine) {
@@ -20,5 +21,12 @@ func CmsRouters(router *gin.Engine) {
 		// GET is a shortcut for router.Handle("GET", path, handlers).
 		// The last handler should be the real handler, the other ones should be middleware that can and should be shared among different routes.
 		root.GET("/cms/hello", cmsApp.Hello)
+	}
+
+	noAuth := router.Group(noAuthPath)
+	{
+		// /out/api/cms/register
+		noAuth.POST("/cms/register", cmsApp.Register)
+		noAuth.POST("/cms/login", cmsApp.Login)
 	}
 }
