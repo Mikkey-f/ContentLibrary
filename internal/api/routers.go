@@ -23,6 +23,8 @@ func CmsRouters(router *gin.Engine) {
 		root.GET("/cms/hello", cmsApp.Hello)
 		root.POST("/cms/content/create", cmsApp.ContentCreate)
 		root.POST("/cms/content/update", cmsApp.ContentUpdate)
+		root.POST("/cms/content/delete", cmsApp.ContentDelete)
+		root.GET("/cms/content/select", cmsApp.ContentSelect)
 	}
 
 	noAuth := router.Group(noAuthPath)
