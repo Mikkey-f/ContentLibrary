@@ -21,17 +21,3 @@ func main() {
 	}
 	fmt.Println(result)
 }
-
-func connRdb() *redis.Client {
-	// redis-cli
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-	_, err := rdb.Ping(context.Background()).Result()
-	if err != nil {
-		panic(err)
-	}
-	return rdb
-}
