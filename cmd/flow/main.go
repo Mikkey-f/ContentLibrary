@@ -32,6 +32,25 @@ func AddTwo(data []byte, option map[string][]string) ([]byte, error) {
 	return []byte(strconv.Itoa(outputInt)), nil
 }
 
+func Aggregator(data []byte, option map[string][]string) ([]byte, error) {
+	fmt.Println("Aggregator=", string(data))
+	return data, nil
+}
+
+func Expand10(data []byte, option map[string][]string) ([]byte, error) {
+	num, _ := strconv.Atoi(string(data))
+	outputInt := num * 10
+	fmt.Println("Expand10=", outputInt)
+	return []byte(strconv.Itoa(outputInt)), nil
+}
+
+func Expand100(data []byte, option map[string][]string) ([]byte, error) {
+	num, _ := strconv.Atoi(string(data))
+	outputInt := num * 100
+	fmt.Println("Expand100=", outputInt)
+	return []byte(strconv.Itoa(outputInt)), nil
+}
+
 func Output(data []byte, option map[string][]string) ([]byte, error) {
 	fmt.Println("Output=", string(data))
 	return []byte("ok"), nil
@@ -41,14 +60,42 @@ func Myflow(workflow *flow.Workflow, context *flow.Context) error {
 	dag := workflow.Dag()
 	// 构建节点
 	dag.Node("input", Input)
+	dag.Node("output", Output)
 	dag.Node("add-one", AddOne)
 	dag.Node("add-two", AddTwo)
-	dag.Node("output", Output)
-
+	dag.Node("aggregator", Aggregator, flow.Aggregator(func(m map[string][]byte) ([]byte, error) {
+		a, _ := strconv.Atoi(string(m["add-one"]))
+		b, _ := strconv.Atoi(string(m["add-two"]))
+		num := a + b
+		fmt.Println("aggregator=", num)
+		return []byte(strconv.Itoa(num)), nil
+	}))
+	branches := dag.ConditionalBranch("judge", []string{"moreThan", "lessThan"}, func(bytes []byte) []string {
+		num, _ := strconv.Atoi(string(bytes))
+		if num > 10 {
+			return []string{"moreThan"}
+		} else {
+			return []string{"lessThan"}
+		}
+	}, flow.Aggregator(func(m map[string][]byte) ([]byte, error) {
+		if v, ok := m["moreThan"]; ok {
+			return v, nil
+		}
+		if v, ok := m["lessThan"]; ok {
+			return v, nil
+		}
+		return nil, nil
+	}))
+	branches["moreThan"].Node("expand-10", Expand10)
+	branches["lessThan"].Node("expand-100", Expand100)
 	// 构建依赖关系
 	dag.Edge("input", "add-one")
-	dag.Edge("add-one", "add-two")
-	dag.Edge("add-two", "output")
+	dag.Edge("input", "add-two")
+	dag.Edge("add-two", "aggregator")
+	dag.Edge("add-one", "aggregator")
+	dag.Edge("aggregator", "judge")
+	dag.Edge("judge", "output")
+
 	return nil
 }
 

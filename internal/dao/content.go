@@ -92,3 +92,22 @@ func (c *ContentDao) IsExist(contentId int) (bool, error) {
 	}
 	return true, nil
 }
+
+func (c *ContentDao) First(contentId int) (*model.ContentDetail, error) {
+	var contentDetail model.ContentDetail
+	err := c.db.Where("id = ?", contentId).First(&contentDetail).Error
+	if err != nil {
+		log.Printf("FirstError isExist = [%v]", err)
+		return nil, err
+	}
+	return &contentDetail, nil
+}
+
+func (c *ContentDao) UpdateById(contentId int, column string, val interface{}) error {
+	err := c.db.Where("id = ?", contentId).Update(column, val).Error
+	if err != nil {
+		log.Printf("UpdateById isExist = [%v]", err)
+		return err
+	}
+	return nil
+}
